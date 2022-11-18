@@ -1,0 +1,91 @@
+﻿@page "/"
+@namespace CommonLibPages.Pages
+@using Microsoft.AspNetCore.Components.Forms
+@using CommonLibPages.Components
+@using CommonLibPages.Resources
+@if (Session.SessionIsActive)
+{
+	switch (_action)
+	{
+		case Actions.List:
+			<MudGrid>
+				<CounterToDo></CounterToDo>
+				<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Add">@_res.AddNew()</MudButton>
+			</MudGrid>
+			<MudGrid>
+				@foreach (var todo in ViewModel.ToDoList)
+				{
+					string c = Colors.Yellow.Accent1;
+					@if (todo.Closed == true) c = Colors.Green.Darken2;
+					@if (todo.Closed == false && todo.Deadline.LocalDateTime < DateTime.Now) c = Colors.Red.Darken2;
+
+					<MudItem xs="12">
+						<MudPaper Elevation="4">
+							<div Class="py-8 px-10 " style="background: @c" @onclick="@(() => Current = todo)">
+								<MudStack Row="true">
+									@if (Current == todo)
+									{
+										@if (todo.Closed)
+										{
+											<MudFab Color="Color.Error" StartIcon="@Icons.Material.Filled.Undo" OnClick="@(() => ActionUnDone(todo))"/>
+										}
+										else
+										{
+											<MudFab Color="Color.Success" StartIcon="@Icons.Material.Filled.Done" OnClick="@(() => ActionDone(todo))"/>
+										}
+									}
+									<div>
+										@if (Session.AmPm == false)
+										{
+											<MudText Typo="Typo.body2" Class="text-center">@todo.Deadline.ToString("dd/MM/yyyy HH:mm")</MudText>
+										}
+										else
+										{
+											<MudText Typo="Typo.body2" Class="text-center">@todo.Deadline.ToString("MM/dd/yyyy hh:mm tt")</MudText>
+										}
+										<MudText Typo="Typo.body1" Class="text-center">@todo.Description</MudText>
+									</div>
+									@if (Current == todo)
+									{
+										<div>
+											@if (todo.Closed == false)
+											{
+												<div class="d-block pa-2 "><MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Update(todo))"/></div>
+											}
+											<div class="d-block pa-2 "><MudFab Color="Color.Warning" StartIcon="@Icons.Material.Filled.Delete" OnClick="@(() => ActionDelete(todo))"/></div>
+										</div>
+
+									}
+								</MudStack>
+							</div>
+						</MudPaper>
+					</MudItem>
+				}
+			</MudGrid>
+			break;
+		case Actions.Update:
+			<EditForm Model="update" OnValidSubmit="@ActionUpdate">
+				<BeSwarm.Validator.BlazorValidator ValidateContext="_validatorContext"/>
+				<BeSwarm.CoreBlazorApp.Components.InputText @bind-Value="@update.Description" Label=@_res.Description() ValidateProperty="@(() => update.Description)"/>
+				<BeSwarm.CoreBlazorApp.Components.InputDate @bind-Value="@update.Deadline" Label=@_res.Date()/>
+				<BeSwarm.CoreBlazorApp.Components.InputTime @bind-Value="@update.Deadline" Label=@_res.Time()/>
+				<MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">@_res.Update()</MudButton>
+				<MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel">@_res.Cancel()</MudButton>
+			</EditForm>
+
+			break;
+		case Actions.Add:
+			<EditForm Model="add" OnValidSubmit="@ActionAdd">
+				<BeSwarm.Validator.BlazorValidator ValidateContext="_validatorContext"/>
+				<BeSwarm.CoreBlazorApp.Components.InputText @bind-Value="@add.Description" Label=@_res.Description() ValidateProperty="@(() => add.Description)"/>
+				<BeSwarm.CoreBlazorApp.Components.InputDate @bind-Value="@add.Deadline" Label=@_res.Date()/>
+				<BeSwarm.CoreBlazorApp.Components.InputTime @bind-Value="@add.Deadline" Label=@_res.Time()/>
+				<MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">@_res.Add()</MudButton>
+				<MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel">@_res.Cancel()</MudButton>
+			</EditForm>
+			break;
+		default:
+			throw new ArgumentOutOfRangeException();
+	}
+
+}
